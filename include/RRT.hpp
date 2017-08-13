@@ -19,6 +19,7 @@ namespace rrt
 		double stepLength;
 		std::deque<Utils::Point<T> > pathPoints;
 		int maxIterations;
+		std::vector< std::pair< Utils::Point<T>, Utils::Point<T> > > tree; 
 		std::vector< std::pair< Utils::Point<T>, Utils::Point<T> > > tree1; 
 		std::vector< std::pair< Utils::Point<T>, Utils::Point<T> > > tree2; 
 		unsigned int biasParameter;
