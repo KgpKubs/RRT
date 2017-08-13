@@ -1,5 +1,5 @@
-#include <iostream>
-#include "../include/RRT_implementation.hpp"
+#include <bits/stdc++.h>
+#include "../include/RRTConnect_implementation.hpp"
 
 using namespace std;
 using namespace rrt;
@@ -26,7 +26,7 @@ int main()
 	test.setEndPoints(start,finish);
 	test.setCheckPointFunction(*(check));
 	test.setStepLength(200);
-	test.setHalfDimensions(2000.0,2000.0);
+	test.setHalfDimensions(3000.0,2000.0);
 	test.setBiasParameter(100);
 	test.setOrigin(origin);
 	test.setMaxIterations(10000);
@@ -35,4 +35,4 @@ int main()
 	deque<Utils::Point<int> > path=test.getPointsOnPath();
 	for(int i=0;i<path.size();i++)
 		cout<<path[i].x<<","<<path[i].y<<endl;
-}
+}	
