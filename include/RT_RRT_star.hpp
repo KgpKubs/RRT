@@ -23,6 +23,12 @@ namespace rrt {
     // Position of the agent
     Utils::Point<T> Xa;
 
+    // Position of the goal
+    Utils::Point<T> Xg;
+
+    // Position of all the obtacles
+    std::vector<Utils::Point<T> > Xobs;
+
     // Path is planned if a point is added to tree within this radius of goal point
     T goal_radius;
 
@@ -44,6 +50,34 @@ namespace rrt {
   public:
     RT_RRT(){};
 
+    RT_RRT(T goal_radius, T obstacle_radius, T search_radius, T node_thresh,
+      T epsilon_radius, long int k_max);
+
+    /** @brief Simultaneously expand and rewire the tree
+     */
+    void expand_rewire();
+
+    /** @brief Find all the nodes which are near to @p query
+     */
+    std::vector<Utils::Point<T> > find_near_nodes(Utils::Point<T> query,
+      std::pair<unsigned int, unsigned int> gride_idx);
+
+    /** @brief Add a new point to the tree
+     */
+    void add_node_to_tree(Utils::Point<T> rand, Utils::Point<T> closest,
+      std::vector<Utils::Point<T> > nearest_nodes);
+
+    /** @brief Rewire the tree from the latest node added to the tree
+     */
+    void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qr);
+
+    /** @brief Rewire the tree from the agent's position
+    */
+    void rewire_root(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs);
+
+    /** @brief Compute the distance between two nodes
+    */
+    double dist(Utils::Point<T> first, Utils::Point<T> second);
   };
 
 }
