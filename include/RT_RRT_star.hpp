@@ -21,7 +21,7 @@ namespace rrt {
     std::map<std::pair<unsigned int, unsigned int> , std::vector<Utils::Point<T> > > grid_nodes;
 
     // Position of the agent
-    Utils::Point Xa;
+    Utils::Point<T> Xa;
 
     // Path is planned if a point is added to tree within this radius of goal point
     T goal_radius;
