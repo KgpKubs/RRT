@@ -10,6 +10,7 @@ namespace Utils
 	{
 		T x;
 		T y;
+		int cost;
 		Point<T> operator+(Point<T> const&rhs)
 		{
 			Point<T> temp;
