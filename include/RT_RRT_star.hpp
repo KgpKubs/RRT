@@ -66,14 +66,20 @@ namespace rrt {
 
     /** @brief Return cost
      */
-    int cost(Utils::point<T> child)
+    std::pair<int,Utils::point<T> > cost(Utils::point<T> child, int count=0)
     {
               if (child==Xa)
-                return 0;
+                return std::pair<int,Utils::point<T> > (0,Xa);
               for(int j=0;i<tree.size();j++)
               {
                 if(tree[j].first==child)
-                  return dist(child,tree[j].second)+cost(tree[j].second)
+                {
+                  std::pair<int,Utils::point<T> > here = cost(tree[j].second,1);
+                  if (count)
+                    return std::pair<int,Utils::point<T> >  (dist(child,tree[j].second)+here.first.first,here.second);
+                  else
+                    return std::pair<int,Utils::point<T> >  (dist(child,tree[j].second)+here.first.first,tree[j].second);
+                }
               }
     }
 
