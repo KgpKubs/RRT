@@ -47,8 +47,11 @@ namespace rrt {
     // Grid density
     long int k_max;
 
+    // Useful parameters for setting some search parameters
+    unsigned int width, length;
+
   public:
-    RT_RRT(){};
+    RT_RRT();
 
     RT_RRT(T goal_radius, T obstacle_radius, T search_radius, T node_thresh,
       T epsilon_radius, long int k_max);
@@ -60,9 +63,10 @@ namespace rrt {
     {
       return sqrt(pow(first.x-second.x,2)+pow(first.y-second.y,2));
     }
+
     /** @brief Return Grid Id
      */
-    std::pair<unsigned int, unsigned int> Grid_Id(Utils::point<T> gride_idx);
+    std::pair<unsigned int, unsigned int> Grid_Id(Utils::Point<T> gride_idx);
 
     /** @brief Return cost
      */
@@ -93,8 +97,7 @@ namespace rrt {
 
     /** @brief Add a new point to the tree
      */
-    void add_node_to_tree(Utils::Point<T> rand, Utils::Point<T> closest,
-      std::vector<Utils::Point<T> > nearest_nodes);
+    void add_node_to_tree(Utils::Point<T> rand);
 
     /** @brief Rewire the tree from the latest node added to the tree
      */
@@ -103,11 +106,11 @@ namespace rrt {
       Utils::Point<T> me = Qr.pop();
       std::pair<int,Utils::Point<T>> now = getCost(me);
       int cost = now.first;
-      Utils::Point<T> parent = now.second; 
+      Utils::Point<T> parent = now.second;
       std::vector<Utils::Point<T> > neighbours= find_near_nodes(Qr);
       for (int i=0;i<neighbours.size();i++)
       {
-        Utils::Point<T> = neighbours[i];
+        Utils::Point<T> neighbour = neighbours[i];
         if (cost > cost - dist(me,parent) + dist(parent,neighbour) + dist(neighbour,me))
         {
               for(int j=0;i<tree.size();j++)
@@ -126,7 +129,7 @@ namespace rrt {
       std::vector<Utils::Point<T> > neighbours= find_near_nodes(Xa);
       for (int i=0;i<neighbours.size();i++)
       {
-        Utils::Point<T> = neighbours[i];
+        Utils::Point<T> neighbour = neighbours[i];
         if (cost > cost - dist(me,Xa) + dist(Xa,neighbour) + dist(neighbour,me))
         {
               for(int j=0;i<tree.size();j++)
@@ -135,7 +138,20 @@ namespace rrt {
                   tree[j].second = Xa;
               }
         }
+      }
     }
+
+    /** @brief Update the radius of neareset nodes prior to calling `find_near_nodes`
+    */
+    void update_epsilon_radius();
+
+    /** @brief Find the closest node
+    */
+    Utils::Point<T> closest_node(Utils::Point<T> rand);
+
+    /** @brief Verify if the line crosses any obstacle
+    */
+    bool line_path_obs(Utils::Point<T> p1, Utils::Point<T> p2);
   };
 
 }
