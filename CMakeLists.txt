@@ -4,8 +4,10 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 
 include_directories("include")
 
-set(SRCS src/Random_sampling.cpp
-  src/RT_RRT_star.cpp)
+set(SRCS src/Random_sampling.cpp)
 
 set(PLANNERS planners)
 add_library(${PLANNERS} SHARED ${SRCS})
+
+add_executable(target test/main.cpp)
+target_link_libraries(target ${PLANNERS})
