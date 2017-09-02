@@ -25,7 +25,7 @@ namespace rrt
 	}
 
 	template <class T>
-	std::deque<Utils::Point<T> > RRT<T>::getPointsOnPath()
+	std::vector<Utils::Point<T> > RRT<T>::getPointsOnPath()
 	{
 		return pathPoints;
 	}
@@ -52,9 +52,7 @@ namespace rrt
 		{
 			//std::cout<<"In Planning Loop"<<std::endl;
 			Utils::Point<T> next;
-			int arr[]={1};
-			std::pair  <Utils::Point <T>,Utils::Point <T> >  mid = treeComplete(arr);
-			if(mid.first!=mid.second)
+			if(treeComplete()==true)
 			{
 				std::cout<<"Tree complete!!"<<std::endl;
 				int start_time=clock();
@@ -69,7 +67,7 @@ namespace rrt
 				//std::cout<<"Adding Next Biased Point to tree!!"<<std::endl;
 				count=0;
 				do{
-					next= generateBiasedPoint(1);
+					next= generateBiasedPoint();
 				}while(checkPoint(next)!=true);
 				//std::cout<<" : "<<next.x<<","<<next.y<<std::endl;
 			}
@@ -94,11 +92,11 @@ namespace rrt
 	template <class T>
 	void RRT<T>::growTree(Utils::Point<T> next)
 	{
-		//growing the tree by adding node
+		//growing the tree by adding node 
 		//std::cout<<"finding parent in tree of size = "<<tree.size()<<std::endl;
 		Utils::Point<T> parent;
-		parent= findClosestNode(next).first;
-		//std::cout<<"current : "<<next.x<<","<<next.y<<"| parent : "<<parent.x<<","<<parent.y<<std::endl;
+		parent= findClosestNode(next);
+		//std::cout<<"current : "<<next.x<<","<<next.y<<"| parent : "<<parent.x<<","<<parent.y<<std::endl;			
 		tree.push_back( std::pair< Utils::Point<T>, Utils::Point<T> > (next,parent));
 		//std::cout<<"Tree grown"<<std::endl;
 		//add pruning code to keep size of tree under control
@@ -111,7 +109,7 @@ namespace rrt
 	}
 
 	template <class T>
-	std::pair<Utils::Point<T>, int>  RRT<T>::findClosestNode(Utils::Point<T> cur)
+	Utils::Point<T> RRT<T>::findClosestNode(Utils::Point<T> cur)
 	{
 		double min_dist=INT_MAX;
 		Utils::Point<T> closest;
@@ -124,7 +122,7 @@ namespace rrt
 				closest=tree[i].first;
 			}
 		}
-		return std::make_pair(closest,1);
+		return closest;
 	}
 
 	template <class T>
@@ -139,13 +137,13 @@ namespace rrt
 			signX=1;
 		if(rand()%2==0)
 			signY=-1;
-		else
+		else 
 			signY=1;
 
 		temp.x = origin.x + signX* ( rand() % (int)halfDimensionX );
 		temp.y = origin.y + signY* ( rand() % (int)halfDimensionY );
 
-		Utils::Point<T> closest=findClosestNode(temp).first;
+		Utils::Point<T> closest=findClosestNode(temp);
 		double theta = atan2(temp.y-closest.y,temp.x-closest.x);
 
 		Utils::Point<T> next;
@@ -156,9 +154,9 @@ namespace rrt
 	}
 
 	template <class T>
-	Utils::Point<T> RRT<T>::generateBiasedPoint(int which)
+	Utils::Point<T> RRT<T>::generateBiasedPoint()
 	{
-		Utils::Point<T> closest=findClosestNode(endPoint).first;
+		Utils::Point<T> closest=findClosestNode(endPoint);
 		double theta = atan2(endPoint.y-closest.y,endPoint.x-closest.x);
 
 		Utils::Point<T> next;
@@ -175,11 +173,11 @@ namespace rrt
 	}
 
 	template <class T>
-	std::pair <Utils::Point <T>,Utils::Point <T> > RRT<T>::treeComplete(int arr[1])
+	bool RRT<T>::treeComplete()
 	{
 		//std::cout<<"Checking if tree is complete? "<<std::endl;
 		//std::cout<<"tree size = "<<tree.size()<<std::endl;
-		int min_dist=INT_MAX;
+		int min_dist=INT_MAX;	
 		for(int i=0;i<tree.size();i++)
 		{
 			double dis= dist(tree[i].first,endPoint);
@@ -187,11 +185,11 @@ namespace rrt
 				min_dist=dis;
 			if(dis < stepLength )
 			{
-				return std::make_pair(tree[i].first,endPoint);
+				return true;
 			}
 		}
 		//std::cout<<"Min Distance In this iteration = "<<min_dist<<std::endl;
-		return std::make_pair(endPoint,endPoint);
+		return false;
 	}
 
 	template <class T>
@@ -230,3 +228,4 @@ namespace rrt
 		return sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y));
 	}
 }
+
