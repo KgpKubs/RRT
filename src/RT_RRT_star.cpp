@@ -53,10 +53,7 @@ namespace rrt {
     return nearest_points;
   }
 
-  template <class T>
-  std::pair<unsigned int, unsigned int> RT_RRT<T>::Grid_Id(Utils::Point<T> node) {
-
-  }
+  
 
   template <class T>
   void RT_RRT<T>::add_node_to_tree(Utils::Point<T> rand) {

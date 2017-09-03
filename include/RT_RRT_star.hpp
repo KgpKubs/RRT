@@ -17,8 +17,8 @@ namespace rrt {
     // Queue at the root of the tree
     std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs;
 
-    // Grid based subset of nodes for grid based search
-    std::map<std::pair<unsigned int, unsigned int> , std::vector<Utils::Point<T> > > grid_nodes;
+    // Grid based subset of nodes for grid based search, value === id of point in main tree
+    std::map<std::pair<unsigned int, unsigned int> , std::vector<int > > grid_nodes;
 
     // Position of the agent
     Utils::Point<T> Xa;
@@ -50,6 +50,11 @@ namespace rrt {
     // Useful parameters for setting some search parameters
     unsigned int width, length;
 
+    //half Dimension
+    unsigned int halfDimensionX, halfDimensionY;
+
+    unsigned int bucketSize;
+
   public:
     RT_RRT();
 
@@ -66,25 +71,39 @@ namespace rrt {
 
     /** @brief Return Grid Id
      */
-    std::pair<unsigned int, unsigned int> Grid_Id(Utils::Point<T> gride_idx);
+    std::pair<unsigned int, unsigned int> Grid_Id(Utils::Point<T> gride_idx){
+      int x = gride_idx.x + halfDimensionX;
+      int y = gride_idx.y + halfDimensionY;
+
+      unsigned int gridX = x/bucketSize;
+      unsigned int gridY = y/bucketSize;
+
+      unsigned int maxGridInX = 2*halfDimensionX/bucketSize;
+      unsigned int maxGridInY = 2*halfDimensionY/bucketSize;
+
+      if (gridX == maxGridInX)
+      {
+        gridX --;
+      }
+
+      if (gridY == maxGridInY)
+      {
+        gridY --;
+      }
+
+      return std::pair<unsigned int, unsigned int > (gridX, gridY);
+    }
 
     /** @brief Return cost
      */
-    std::pair<int,Utils::point<T> > cost(Utils::point<T> child, int count=0)
+    std::pair<double,Utils::Point<T> > cost(Utils::Point<T> child)
     {
-              if (child==Xa)
-                return std::pair<int,Utils::point<T> > (0,Xa);
-              for(int j=0;i<tree.size();j++)
-              {
-                if(tree[j].first==child)
-                {
-                  std::pair<int,Utils::point<T> > here = cost(tree[j].second,1);
-                  if (count)
-                    return std::pair<int,Utils::point<T> >  (dist(child,tree[j].second)+here.first.first,here.second);
-                  else
-                    return std::pair<int,Utils::point<T> >  (dist(child,tree[j].second)+here.first.first,tree[j].second);
-                }
-              }
+        if (child==Xa)
+          return std::pair<int,Utils::Point<T> > (0,Xa);
+        else{
+          Utils::Point<T> parent = getParent(child);
+          return std::pair<int, Utils::Point<T> >(cost(parent).first + dist(child,parent), parent);
+       }
     }
 
     /** @brief Simultaneously expand and rewire the tree
@@ -103,22 +122,41 @@ namespace rrt {
      */
     void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qr)
     {
-      Utils::Point<T> me = Qr.pop();
-      std::pair<int,Utils::Point<T>> now = getCost(me);
-      int cost = now.first;
-      Utils::Point<T> parent = now.second;
-      std::vector<Utils::Point<T> > neighbours= find_near_nodes(Qr);
-      for (int i=0;i<neighbours.size();i++)
-      {
-        Utils::Point<T> neighbour = neighbours[i];
-        if (cost > cost - dist(me,parent) + dist(parent,neighbour) + dist(neighbour,me))
+      float start = clock();
+      float timeLimit;
+      while(clock() - start < timeLimit && !Qr.empty()){
+        Utils::Point<T> cur = Qr.front();
+        std::pair<int,Utils::Point<T>> now = cost(cur);
+        double myScore = now.first;
+        Utils::Point<T> parent = now.second;
+        std::vector<Utils::Point<T> > neighbours= find_near_nodes(cur);
+
+        int myId;
+        std::pair<unsigned int, unsigned int> gridId = Grid_Id(cur);
+        std::vector<int> ids = grid_nodes[gridId];
+        for (int i = 0; i < ids.size(); ++i)
         {
-              for(int j=0;i<tree.size();j++)
-              {
-                if(tree[j].first==me)
-                  tree[j].second = neighbour[i];
-              }
+          if (tree[ids[i]].first == cur)
+          {
+            myId = ids[i];
+            break;
+          }
         }
+
+        for (int i=0;i<neighbours.size();i++)
+        {
+          Utils::Point<T> neighbour = neighbours[i];
+          if (cost(neighbour).first + dist(neighbour,cur) < myScore)
+          {
+            myScore = cost(neighbour).first + dist(neighbour,cur);
+            tree[myId].second = neighbour;
+          }
+          if (find(Qr.front(), Qr.back() + 1 , neighbour) != Qr.back() + 1)
+          {
+            Qr.push(neighbour);
+          }
+        }
+        Qr.pop();
       }
     }
 
@@ -126,19 +164,48 @@ namespace rrt {
     */
     void rewire_root(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs)
     {
-      std::vector<Utils::Point<T> > neighbours= find_near_nodes(Xa);
-      for (int i=0;i<neighbours.size();i++)
+
+      if (Qs.empty())
       {
-        Utils::Point<T> neighbour = neighbours[i];
-        if (cost > cost - dist(me,Xa) + dist(Xa,neighbour) + dist(neighbour,me))
-        {
-              for(int j=0;i<tree.size();j++)
-              {
-                if(tree[j].first==neighbour[i])
-                  tree[j].second = Xa;
-              }
-        }
+        Qs.push(Xa);
       }
+
+      float start = clock();
+
+
+      float timeLimit; //to declare by calling file
+
+      while(!Qs.empty() && (clock() - start) > timeLimit){
+        Utils::Point<T> cur = Qs.front();
+        std::vector<Utils::Point<T> > neighbours= find_near_nodes(cur);
+        float myScore = cost(cur).first;
+        std::pair<unsigned int, unsigned int> gridID = Grid_Id(cur);
+        int myId;
+        for (int i = 0; i < grid_nodes[gridID].size(); ++i)
+        {
+          if (tree[i].first == cur)
+          {
+            myId = i;
+            break;
+          }
+        }
+        for (int i=0;i<neighbours.size();i++)
+        {
+          Utils::Point<T> neighbour = neighbours[i];
+          float nbScore = cost(neighbour).first;
+          if (nbScore + dist(neighbour,cur) < myScore)
+          {
+            myScore = nbScore;
+            tree[myId].second = neighbour;
+          }
+          if (find(Qs.front(), Qs.back() + 1, neighbour) != Qs.back() +1)
+          {
+            Qs.push(neighbour);
+          }
+        }
+        Qs.pop();
+      }
+      
     }
 
     /** @brief Update the radius of neareset nodes prior to calling `find_near_nodes`
@@ -147,11 +214,64 @@ namespace rrt {
 
     /** @brief Find the closest node
     */
-    Utils::Point<T> closest_node(Utils::Point<T> rand);
+    Utils::Point<T> closest_node(Utils::Point<T> rand){
+      Utils::Point<T> closest;
+
+      std::pair<unsigned int, unsigned int> gridId = Grid_Id(rand);
+      unsigned int maxGridInX = 2*halfDimensionX/bucketSize;
+      unsigned int maxGridInY = 2*halfDimensionY/bucketSize;
+      std::vector<std::pair<unsigned int, unsigned int> > adjacentGrid;
+      adjacentGrid.push_back(gridId);
+      int x[] = {-1,-1,-1,0,0,1,1,1};
+      int y[] = {-1,0,1,-1,1,-1,0,1};
+      for (int i = 0; i < 8; ++i)
+      {
+        unsigned int gridX = gridId.first + x[i];
+        unsigned int gridY = gridId.second + y[i];
+        if (gridX >= 0 && gridX < maxGridInX && gridY >=0 && gridY < maxGridInY)
+        {
+          adjacentGrid.push_back(std::pair<unsigned int, unsigned int > (gridX,gridY));
+        }
+      }
+      float minDist = 999999;
+      for (int i = 0; i < adjacentGrid.size(); ++i)
+      {
+        std::vector<int> ids = grid_nodes[adjacentGrid[i]];
+        for (int j = 0; j < ids.size(); ++j)
+        {
+          float distance = dist(rand,tree[ids[j]].first);
+          if (distance < minDist)
+          {
+            minDist = distance;
+            closest = tree[ids[j]].first;
+          }
+        }
+      }
+
+      return closest;
+    }
 
     /** @brief Verify if the line crosses any obstacle
     */
     bool line_path_obs(Utils::Point<T> p1, Utils::Point<T> p2);
+
+    
+    /**@brief Return Parent of Node
+    */
+    Utils::Point<T> getParent(Utils::Point<T> cur)
+    {
+      std::pair<unsigned int, unsigned int> gridId= Grid_Id(cur);
+      std::vector<int> ids = grid_nodes[gridId];
+      // iterate over cur point bucket
+      for(int i=0; i<ids.size() ;i++)
+      {
+        if(tree[ids[i]].first==cur){
+          return tree[ids[i]].second;
+        }
+      }
+    }
+
+
   };
 
 }
