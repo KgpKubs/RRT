@@ -37,6 +37,9 @@ int main()
 	test.setOrigin(origin);
 	test.setMaxIterations(10000);
 	test.plan();
+
+
+	vector<Utils::Point<int> > path=test.getPointsOnPath();
 	cout<<"#################################################"<<endl;
 	deque<Utils::Point<int> > path=test.getPointsOnPath();
 

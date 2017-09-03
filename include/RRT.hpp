@@ -21,8 +21,6 @@ namespace rrt
 		std::vector<Utils::Point<T> > pathPoints;
 		int maxIterations;
 		std::vector< std::pair< Utils::Point<T>, Utils::Point<T> > > tree; 
-		std::vector< std::pair< Utils::Point<T>, Utils::Point<T> > > tree1; 
-		std::vector< std::pair< Utils::Point<T>, Utils::Point<T> > > tree2; 
 		unsigned int biasParameter;
 		
 	public:
@@ -165,7 +163,6 @@ namespace rrt
 		std::vector< Utils::Point<T> > getChild(Utils::Point<T> point);
 	};
 }
-
 
 
 
