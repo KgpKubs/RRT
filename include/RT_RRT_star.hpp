@@ -12,7 +12,7 @@ namespace rrt {
     // Main Tree
     std::vector<std::pair<Utils::Point<T>, Utils::Point<T> > > tree;
 
-    // Queue at the point of addition of the point to the tree
+    // Queue at the Point of addition of the Point to the tree
     std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qr;
     // Queue at the root of the tree
     std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs;
@@ -29,7 +29,7 @@ namespace rrt {
     // Position of all the obtacles
     std::vector<Utils::Point<T> > Xobs;
 
-    // Path is planned if a point is added to tree within this radius of goal point
+    // Path is planned if a Point is added to tree within this radius of goal Point
     T goal_radius;
 
     // All the nodes within this radius of an obstacle are given infinite cost
@@ -70,19 +70,19 @@ namespace rrt {
 
     /** @brief Return cost
      */
-    std::pair<int,Utils::point<T> > cost(Utils::point<T> child, int count=0)
+    std::pair<int,Utils::Point<T> > cost(Utils::Point<T> child, int count=0)
     {
               if (child==Xa)
-                return std::pair<int,Utils::point<T> > (0,Xa);
-              for(int j=0;i<tree.size();j++)
+                return std::pair<int,Utils::Point<T> > (0,Xa);
+              for(int j=0;j<tree.size();j++)
               {
                 if(tree[j].first==child)
                 {
-                  std::pair<int,Utils::point<T> > here = cost(tree[j].second,1);
+                  std::pair<int,Utils::Point<T> > here = cost(tree[j].second,1);
                   if (count)
-                    return std::pair<int,Utils::point<T> >  (dist(child,tree[j].second)+here.first.first,here.second);
+                    return std::pair<int,Utils::Point<T> >  (dist(child,tree[j].second)+here.first.first,here.second);
                   else
-                    return std::pair<int,Utils::point<T> >  (dist(child,tree[j].second)+here.first.first,tree[j].second);
+                    return std::pair<int,Utils::Point<T> >  (dist(child,tree[j].second)+here.first.first,tree[j].second);
                 }
               }
     }
@@ -95,25 +95,27 @@ namespace rrt {
      */
     std::vector<Utils::Point<T> > find_near_nodes(Utils::Point<T> query);
 
-    /** @brief Add a new point to the tree
+    /** @brief Add a new Point to the tree
      */
     void add_node_to_tree(Utils::Point<T> rand);
 
     /** @brief Rewire the tree from the latest node added to the tree
      */
-    void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qr)
+    void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > &Q)
     {
-      Utils::Point<T> me = Qr.pop();
+      Utils::Point<T> me = Q.pop();
       std::pair<int,Utils::Point<T>> now = getCost(me);
       int cost = now.first;
       Utils::Point<T> parent = now.second;
-      std::vector<Utils::Point<T> > neighbours= find_near_nodes(Qr);
+      std::vector<Utils::Point<T> > neighbours= find_near_nodes(Q);
+      for(size_t i = 0; i < neighbours.size(); i++)
+          Q.push(neighbours[i]);
       for (int i=0;i<neighbours.size();i++)
       {
         Utils::Point<T> neighbour = neighbours[i];
         if (cost > cost - dist(me,parent) + dist(parent,neighbour) + dist(neighbour,me))
         {
-              for(int j=0;i<tree.size();j++)
+              for(int j=0;j<tree.size();j++)
               {
                 if(tree[j].first==me)
                   tree[j].second = neighbour[i];
@@ -126,19 +128,11 @@ namespace rrt {
     */
     void rewire_root(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs)
     {
+      int j;
       std::vector<Utils::Point<T> > neighbours= find_near_nodes(Xa);
-      for (int i=0;i<neighbours.size();i++)
-      {
-        Utils::Point<T> neighbour = neighbours[i];
-        if (cost > cost - dist(me,Xa) + dist(Xa,neighbour) + dist(neighbour,me))
-        {
-              for(int j=0;i<tree.size();j++)
-              {
-                if(tree[j].first==neighbour[i])
-                  tree[j].second = Xa;
-              }
-        }
-      }
+      for(size_t i = 0; i < neighbours.size(); i++)
+          Qs.push(neighbours[i]);
+      rewire_node(Qs);
     }
 
     /** @brief Update the radius of neareset nodes prior to calling `find_near_nodes`
