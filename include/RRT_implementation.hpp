@@ -25,9 +25,9 @@ namespace rrt
 	}
 
 	template <class T>
-	std::deque<Utils::Point<T> > RRT<T>::getPointsOnPath()
+	std::vector<Utils::Point<T> > RRT<T>::getPointsOnPath()
 	{
-		return pathPoints;
+		return finalPath;
 	}
 
 	template <class T>
@@ -43,6 +43,12 @@ namespace rrt
 	}
 
 	template <class T>
+	void RRT<T>::setObstacleRadius(int value)
+	{
+		obstacleradius=value;
+	}
+
+	template <class T>
 	bool RRT<T>:: plan()
 	{
 		int count=0;
@@ -54,11 +60,14 @@ namespace rrt
 			Utils::Point<T> next;
 			int arr[]={1};
 			std::pair  <Utils::Point <T>,Utils::Point <T> >  mid = treeComplete(arr);
+			std::pair  <Utils::Point <T>,int >  both;
+			// Utils::Point<T> both;
 			if(mid.first!=mid.second)
 			{
 				std::cout<<"Tree complete!!"<<std::endl;
 				int start_time=clock();
-				growTree(endPoint);
+				both= findClosestNode(endPoint);
+				growTree(both,endPoint);
 				int end_time=clock();
 				std::cout<<"Time to generate path = "<<end_time-start_time<<std::endl;
 				generatePath(startPoint,endPoint);
@@ -70,7 +79,8 @@ namespace rrt
 				count=0;
 				do{
 					next= generateBiasedPoint(1);
-				}while(checkPoint(next)!=true);
+					both= findClosestNode(next);
+				}while(checkPoint(next, next)!=true);
 				//std::cout<<" : "<<next.x<<","<<next.y<<std::endl;
 			}
 			else
@@ -78,11 +88,12 @@ namespace rrt
 				//std::cout<<"Adding next point to tree!!"<<std::endl;
 				do{
 					next = generatePoint();
-				}while(checkPoint(next)!=true);
+					both= findClosestNode(next);
+				}while(checkPoint(next, next)!=true);
 				//std::cout<<" : "<<next.x<<","<<next.y<<std::endl;
 			}
 			//std::cout<<" Growing Tree next : "<<next.x<<","<<next.y<<std::endl;
-			growTree(next);
+			growTree(both, next);
 			count++;
 			check++;
 			//std::cout<<"check= "<<check<<", count= "<<count<<std::endl;
@@ -92,14 +103,14 @@ namespace rrt
 	}
 
 	template <class T>
-	void RRT<T>::growTree(Utils::Point<T> next)
+	void RRT<T>::growTree(std::pair  <Utils::Point <T>,int > parent,Utils::Point<T> next)
 	{
 		//growing the tree by adding node
 		//std::cout<<"finding parent in tree of size = "<<tree.size()<<std::endl;
-		Utils::Point<T> parent;
-		parent= findClosestNode(next).first;
+	
+		// parent= findClosestNode(next).first;
 		//std::cout<<"current : "<<next.x<<","<<next.y<<"| parent : "<<parent.x<<","<<parent.y<<std::endl;
-		tree.push_back( std::pair< Utils::Point<T>, Utils::Point<T> > (next,parent));
+		tree.push_back( std::pair< Utils::Point<T>, Utils::Point<T> > (next,parent.first));
 		//std::cout<<"Tree grown"<<std::endl;
 		//add pruning code to keep size of tree under control
 	}
@@ -169,7 +180,7 @@ namespace rrt
 	}
 
 	template <class T>
-	bool RRT<T>::checkPoint(Utils::Point<T> next)
+	bool RRT<T>::checkPoint(Utils::Point<T> first, Utils::Point<T> next)
 	{
 		return userCheck(next);
 	}
@@ -204,12 +215,12 @@ namespace rrt
 	void RRT<T>::generatePath(Utils::Point<T> first,Utils::Point<T> last)
 	{
 		Utils::Point<T> cur=last;
-		pathPoints.push_back(cur);
+		finalPath.push_back(cur);
 		while(cur!=first || cur!=startPoint)
 		{
 			Utils::Point<T> parent= getParent(cur);
 			//std::cout<<"current : "<<cur.x<<","<<cur.y<<"| parent : "<<parent.x<<","<<parent.y<<std::endl;
-			pathPoints.push_back(parent);
+			finalPath.push_back(parent);
 			cur=parent;
 		}
 	}

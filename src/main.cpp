@@ -32,7 +32,7 @@ int main()
 	test.setMaxIterations(10000);
 	test.plan();
 	cout<<"#################################################"<<endl;
-	deque<Utils::Point<int> > path=test.getPointsOnPath();
+	vector<Utils::Point<int> > path=test.getPointsOnPath();
 	for(int i=0;i<path.size();i++)
 		cout<<path[i].x<<","<<path[i].y<<endl;
 }
