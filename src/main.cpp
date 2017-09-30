@@ -30,6 +30,7 @@ int main()
 	test.setBiasParameter(100);
 	test.setOrigin(origin);
 	test.setMaxIterations(10000);
+	test.setObstacleRadius(50);
 	test.plan();
 	cout<<"#################################################"<<endl;
 	vector<Utils::Point<int> > path=test.getPointsOnPath();

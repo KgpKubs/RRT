@@ -29,7 +29,6 @@ namespace rrt
 	{
 		Utils::Point<T> parent = pathPoints[0];
 		finalPath.push_back(parent);
-		int start=0;
 		for (int i=1; i<pathPoints.size();i++)
 		{
 			Utils::Point<T> now = pathPoints[1];
@@ -249,7 +248,6 @@ namespace rrt
 	template <class T>
 	bool RRT<T>::checkPoint(Utils::Point<T> parent, Utils::Point<T> next)
 	{
-
 		int x1=parent.x, x2=next.x, y1=parent.y,y2=next.y;
 		float x=x1, count;
 		try

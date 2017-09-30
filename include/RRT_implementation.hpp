@@ -27,6 +27,21 @@ namespace rrt
 	template <class T>
 	std::vector<Utils::Point<T> > RRT<T>::getPointsOnPath()
 	{
+		Utils::Point<T> parent = pathPoints[0];
+		finalPath.push_back(parent);
+		for (int i=1; i<pathPoints.size();i++)
+		{
+			Utils::Point<T> now = pathPoints[1];
+			if(checkPoint(parent,now)!=true)
+			{
+				parent = pathPoints[i-1];
+				i--;
+				if (i!=0)
+					finalPath.push_back(parent);
+			}
+
+		}
+		finalPath.push_back(pathPoints[pathPoints.size()-1]);
 		return finalPath;
 	}
 
@@ -80,7 +95,7 @@ namespace rrt
 				do{
 					next= generateBiasedPoint(1);
 					both= findClosestNode(next);
-				}while(checkPoint(next, next)!=true);
+				}while(checkPoint(both.first, next)!=true);
 				//std::cout<<" : "<<next.x<<","<<next.y<<std::endl;
 			}
 			else
@@ -89,7 +104,7 @@ namespace rrt
 				do{
 					next = generatePoint();
 					both= findClosestNode(next);
-				}while(checkPoint(next, next)!=true);
+				}while(checkPoint(both.first, next)!=true);
 				//std::cout<<" : "<<next.x<<","<<next.y<<std::endl;
 			}
 			//std::cout<<" Growing Tree next : "<<next.x<<","<<next.y<<std::endl;
@@ -180,9 +195,85 @@ namespace rrt
 	}
 
 	template <class T>
-	bool RRT<T>::checkPoint(Utils::Point<T> first, Utils::Point<T> next)
+	bool RRT<T>::obstacle_here(int x, int y)
 	{
-		return userCheck(next);
+		for (int i=0;i<ObstaclePoints.size();i++)
+		{
+			Utils::Point<T> pratham;
+			pratham.x = x; pratham.y = y;
+			Utils::Point<T> dwitiya;
+			dwitiya.x = ObstaclePoints[i].x; dwitiya.y = ObstaclePoints[i].y;
+			if (dist(pratham,dwitiya)<obstacleradius)
+				return true;
+		}
+		return false;
+	}
+
+
+	template <class T>
+	bool RRT<T>::checkPoint(Utils::Point<T> parent, Utils::Point<T> next)
+	{
+		int x1=parent.x, x2=next.x, y1=parent.y,y2=next.y;
+		float x=x1, count;
+		try
+		{
+		 // std::cout<<"\nIn try ";
+		 // std::cout<<x1<<std::endl;
+		 // std::cout<<x2<<std::endl;
+		 // std::cout<<y1<<std::endl;
+		 // std::cout<<y2<<std::endl;
+
+		        int m=float(y2-y1)/(x2-x1);
+		        if (m==0) throw 20;
+		        int c=y2-m*x2;
+		        count = fabs(1.0/m);
+		        // while(1)
+		        if (count>1) count=1;
+		        if (count<-1) count=-1;
+		        if (x2<x1) count*=-1;
+		        // std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
+		        while (1)
+		        {
+		            x+=count;
+		            int y=m*x+c;
+		            if ((count>0 and x>=x2) || (count<0 and x<=x2))
+		            {
+		                // std::cout<<"Return true from try\n";
+		                return true;
+		            }
+		            else
+		            {
+		        // std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
+		            	// std::cout<<std::endl<<"x: "<<x<<" x2: "<<x2<<std::endl;
+		            	// std::cout<<"count: "<<count<<std::endl;
+		            }
+		            if (obstacle_here(x,y))
+		            {
+		                // std::cout<<"Return false from try\n";
+		                return false;
+		            }
+		        }
+		}
+		catch(int e)
+		{
+		        count=1;
+		        int y=y1;
+		        if (y2<y1) count*=-1;
+		        while (1)
+		        {
+		            y+=count;
+		            if ((count>0 and y>=y2) || (count<0 and y<=y2))
+		            {
+		            	// std::cout<<"Return true from catch\n";
+		                return true;
+		            }
+		            if (obstacle_here(x,y))
+		            {
+		            	// std::cout<<"Return false from catch\n";
+		                return false;
+		            }
+		        }
+		}
 	}
 
 	template <class T>
@@ -215,12 +306,12 @@ namespace rrt
 	void RRT<T>::generatePath(Utils::Point<T> first,Utils::Point<T> last)
 	{
 		Utils::Point<T> cur=last;
-		finalPath.push_back(cur);
+		pathPoints.push_back(cur);
 		while(cur!=first || cur!=startPoint)
 		{
 			Utils::Point<T> parent= getParent(cur);
 			//std::cout<<"current : "<<cur.x<<","<<cur.y<<"| parent : "<<parent.x<<","<<parent.y<<std::endl;
-			finalPath.push_back(parent);
+			pathPoints.push_back(parent);
 			cur=parent;
 		}
 	}
