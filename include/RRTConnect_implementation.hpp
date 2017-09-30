@@ -43,6 +43,12 @@ namespace rrt
 	}
 
 	template <class T>
+	void RRT<T>::setObstacleRadius(int value)
+	{
+		obstacleradius=value;
+	}
+
+	template <class T>
 	bool RRT<T>:: plan()
 	{
 		int count=0;
@@ -50,9 +56,10 @@ namespace rrt
 		int check=0;
 		tree1.push_back(std::pair< Utils::Point<T>, Utils::Point<T> > (startPoint,startPoint));
 		tree2.push_back(std::pair< Utils::Point<T>, Utils::Point<T> > (endPoint,endPoint));
+		std::pair < Utils::Point<T> , int > both;
 		while( check < maxIterations)
 		{
-			//std::cout<<"In Planning Loop"<<std::endl;
+			// std::cout<<"In Planning Loop"<<std::endl;
 			Utils::Point<T> next;
 			int flag[]={0};
 			std::pair <Utils::Point<T>, Utils::Point<T> > mid = treeComplete(flag);
@@ -68,24 +75,29 @@ namespace rrt
 			}
 			else if(count%biasParameter==0)
 			{
-				//std::cout<<"Adding Next Biased Point to tree!!"<<std::endl;
+				// std::cout<<"Adding Next Biased Point to tree!!"<<std::endl;
 				count=0;
 				do{
 					next= generateBiasedPoint(which);
 					which*=-1;
-				}while(checkPoint(next)!=true);
+					both= findClosestNode(next);
+					// std::cout<<"Case 1: "<<checkPoint(both.first, next);
+
+				}while(checkPoint(both.first, next)!=true);
 				//std::cout<<" : "<<next.x<<","<<next.y<<std::endl;
 			}
 			else
 			{
-				//std::cout<<"Adding next point to tree!!"<<std::endl;
+				// std::cout<<"Adding next point to tree!!"<<std::endl;
 				do{
 					next = generatePoint();
-				}while(checkPoint(next)!=true);
+					both= findClosestNode(next);
+					// std::cout<<"Case 2: "<<checkPoint(both.first, next);
+				}while(checkPoint(both.first,next)!=true);
 				//std::cout<<" : "<<next.x<<","<<next.y<<std::endl;
 			}
 			//std::cout<<" Growing Tree next : "<<next.x<<","<<next.y<<std::endl;
-			growTree(next);
+			growTree(both,next);
 			count++;
 			check++;
 			//std::cout<<"check= "<<check<<", count= "<<count<<std::endl;
@@ -95,11 +107,11 @@ namespace rrt
 	}
 
 	template <class T>
-	void RRT<T>::growTree(Utils::Point<T> next)
+	void RRT<T>::growTree(std::pair < Utils::Point<T>, int > both,Utils::Point<T> next)
 	{
 		//growing the tree by adding node 
 		//std::cout<<"finding parent in tree of size = "<<tree.size()<<std::endl;
-		std::pair < Utils::Point<T> , int > both= findClosestNode(next);
+		// std::pair < Utils::Point<T> , int > both= findClosestNode(next);
 		Utils::Point<T> parent=both.first;
 		int which = both.second;
 		//std::cout<<"current : "<<next.x<<","<<next.y<<"| parent : "<<parent.x<<","<<parent.y<<std::endl;
@@ -107,7 +119,6 @@ namespace rrt
 			tree2.push_back( std::pair< Utils::Point<T>, Utils::Point<T> > (next,parent));
 		else
 			tree1.push_back( std::pair< Utils::Point<T>, Utils::Point<T> > (next,parent));
-
 		//std::cout<<"Tree grown"<<std::endl;
 		//add pruning code to keep size of tree under control
 	}
@@ -199,10 +210,91 @@ namespace rrt
 		return next;
 	}
 
+	// float dist(int x1, int y1, int x2, int y2)
+	// {
+	// 	return sqrt(pow((x1-x2),2)+pow((y1-y2),2));
+	// }
+
 	template <class T>
-	bool RRT<T>::checkPoint(Utils::Point<T> next)
+	bool RRT<T>::obstacle_here(int x, int y)
 	{
-		return userCheck(next);
+		for (int i=0;i<ObstaclePoints.size();i++)
+		{
+			Utils::Point<T> pratham;
+			pratham.x = x; pratham.y = y;
+			Utils::Point<T> dwitiya;
+			dwitiya.x = ObstaclePoints[i].x; dwitiya.y = ObstaclePoints[i].y;
+			if (dist(pratham,dwitiya)<obstacleradius)
+				return true;
+		}
+		return false;
+	}
+
+	template <class T>
+	bool RRT<T>::checkPoint(Utils::Point<T> parent, Utils::Point<T> next)
+	{
+
+		int x1=parent.x, x2=next.x, y1=parent.y,y2=next.y;
+		float x=x1, count;
+		try
+		{
+		 // std::cout<<"\nIn try ";
+		 // std::cout<<x1<<std::endl;
+		 // std::cout<<x2<<std::endl;
+		 // std::cout<<y1<<std::endl;
+		 // std::cout<<y2<<std::endl;
+
+		        int m=float(y2-y1)/(x2-x1);
+		        if (m==0) throw 20;
+		        int c=y2-m*x2;
+		        count = fabs(1.0/m);
+		        // while(1)
+		        if (count>1) count=1;
+		        if (count<-1) count=-1;
+		        if (x2<x1) count*=-1;
+		        // std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
+		        while (1)
+		        {
+		            x+=count;
+		            int y=m*x+c;
+		            if ((count>0 and x>=x2) || (count<0 and x<=x2))
+		            {
+		                // std::cout<<"Return true from try\n";
+		                return true;
+		            }
+		            else
+		            {
+		        // std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
+		            	// std::cout<<std::endl<<"x: "<<x<<" x2: "<<x2<<std::endl;
+		            	// std::cout<<"count: "<<count<<std::endl;
+		            }
+		            if (obstacle_here(x,y))
+		            {
+		                // std::cout<<"Return false from try\n";
+		                return false;
+		            }
+		        }
+		}
+		catch(int e)
+		{
+		        count=1;
+		        int y=y1;
+		        if (y2<y1) count*=-1;
+		        while (1)
+		        {
+		            y+=count;
+		            if ((count>0 and y>=y2) || (count<0 and y<=y2))
+		            {
+		            	// std::cout<<"Return true from catch\n";
+		                return true;
+		            }
+		            if (obstacle_here(x,y))
+		            {
+		            	// std::cout<<"Return false from catch\n";
+		                return false;
+		            }
+		        }
+		}
 	}
 
 	template <class T>
