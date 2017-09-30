@@ -33,7 +33,7 @@ namespace rrt {
 
   template <class T>
   void RT_RRT<T>::update_epsilon_radius() {
-    size_t total_nodes = this->tree.size();
+    size_t total_nodes = this->RT_RRT<T>::tree.size();
 
   }
 
@@ -54,11 +54,6 @@ namespace rrt {
   }
 
   template <class T>
-  std::pair<unsigned int, unsigned int> RT_RRT<T>::Grid_Id(Utils::Point<T> node) {
-
-  }
-
-  template <class T>
   void RT_RRT<T>::add_node_to_tree(Utils::Point<T> rand) {
 
     Utils::Point<T> closest = closest_node(rand);
@@ -73,6 +68,121 @@ namespace rrt {
 
     }
 
+  }
+
+  template <class T>
+  double dist(Utils::Point<T> first, Utils::Point<T> second)
+  {
+    return sqrt(pow(first.x-second.x,2)+pow(first.y-second.y,2));
+  }
+
+  template <class T>
+  void cube_round(float xyz[], float rxyz[])
+  {
+    float rx = nearbyint(xyz[0]);
+    float ry = nearbyint(xyz[1]);
+    float rz = nearbyint(xyz[2]);
+
+    float x_diff = fabs(rx - xyz[0]);
+    float y_diff = fabs(ry - xyz[1]);
+    float z_diff = fabs(rz - xyz[2]);
+
+    if ((x_diff > y_diff) && (x_diff > z_diff))
+        rx = -ry-rz;
+    else if (y_diff > z_diff)
+        ry = -rx-rz;
+    else
+        rz = -rx-ry;
+    rxyz[0] = rx; rxyz[1] = ry; rxyz[2] = rz;
+  }
+
+  template <class T>
+  std::pair<int, int > cube_to_axial(float rxyz[])
+  {
+      int q = rxyz[0];
+      int r = rxyz[2];
+      return std::pair<int, int >(q, r);
+  }
+
+  template <class T>
+  void axial_to_cube(float q, float r, float xyz[])
+  {
+    xyz[0] = q;
+    xyz[2] = r;
+    xyz[1] = -xyz[0]-xyz[2];
+  }
+
+  template <class T>
+  std::pair<int, int > hex_round(float q,float r)
+  {
+    float xyz[3];
+    RT_RRT<T>::axial_to_cube(q,r,xyz);
+    float rxyz[3];
+    RT_RRT<T>::cube_round(xyz, rxyz);
+    return RT_RRT<T>::cube_to_axial(rxyz);
+  }
+
+  template <class T>
+  std::pair<int, int> Grid_Id(Utils::Point<T> gride_idx, int size = 4)
+  {
+    //size is edge length of hexagon
+    float x = gride_idx.x, y = gride_idx.y;
+    float q = (x * sqrt(3)/3 - y / 3) / size;
+    float r = (y * 2/3) / size;
+    std::pair<int, int> here = RT_RRT<T>::hex_round(q,r);
+    return here;
+  }
+
+  template <class T>
+  std::pair<int,Utils::Point<T> > cost(Utils::Point<T> child, int count=0)
+  {
+            if (child==RT_RRT<T>::Xa)
+              return std::pair<int,Utils::Point<T> > (0,RT_RRT<T>::Xa);
+            for(int j=0;j<RT_RRT<T>::tree.size();j++)
+            {
+              if(RT_RRT<T>::tree[j].first==child)
+              {
+                std::pair<int,Utils::Point<T> > here = cost(RT_RRT<T>::tree[j].second,1);
+                if (count)
+                  return std::pair<int,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first.first,here.second);
+                else
+                  return std::pair<int,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first.first,RT_RRT<T>::tree[j].second);
+              }
+            }
+  }
+
+  template <class T>
+  void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > &Q)
+  {
+    Utils::Point<T> me = Q.pop();
+    std::pair<int,Utils::Point<T>> now = getCost(me);
+    int cost = now.first;
+    Utils::Point<T> parent = now.second;
+    std::vector<Utils::Point<T> > neighbours= find_near_nodes(Q);
+    for(size_t i = 0; i < neighbours.size(); i++)
+        Q.push(neighbours[i]);
+    for (int i=0;i<neighbours.size();i++)
+    {
+      Utils::Point<T> neighbour = neighbours[i];
+      if (cost > cost - dist(me,parent) + dist(parent,neighbour) + dist(neighbour,me))
+      {
+            for(int j=0;j<RT_RRT<T>::tree.size();j++)
+            {
+              if(RT_RRT<T>::tree[j].first==me)
+                RT_RRT<T>::tree[j].second = neighbour[i];
+            }
+      }
+    }
+  }
+
+  template <class T>
+  void rewire_root(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs)
+  {
+    int j;
+    std::vector<Utils::Point<T> > neighbours= find_near_nodes(RT_RRT<T>::Xa);
+    for(size_t i = 0; i < neighbours.size(); i++)
+        Qs.push(neighbours[i]);
+    rewire_node(Qs);
   }
 
 }
