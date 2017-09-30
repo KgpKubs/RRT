@@ -55,7 +55,6 @@ namespace rrt {
 
   template <class T>
   void RT_RRT<T>::add_node_to_tree(Utils::Point<T> rand) {
-
     Utils::Point<T> closest = closest_node(rand);
     std::vector<Utils::Point<T> > x_near = find_near_nodes(rand);
 
@@ -134,28 +133,36 @@ namespace rrt {
   }
 
   template <class T>
-  std::pair<int,Utils::Point<T> > cost(Utils::Point<T> child, int count=0)
+  std::pair<int,Utils::Point<T> > cost(Utils::Point<T> child, int count=0, int k=-1)
   {
+            // k is location in the tree
             if (child==RT_RRT<T>::Xa)
               return std::pair<int,Utils::Point<T> > (0,RT_RRT<T>::Xa);
-            for(int j=0;j<RT_RRT<T>::tree.size();j++)
+            std::pair<int,Utils::Point<T> > here;
+            if (count==0)
             {
-              if(RT_RRT<T>::tree[j].first==child)
+              int j=0;
+              for(;j<RT_RRT<T>::tree.size();j++)
               {
-                std::pair<int,Utils::Point<T> > here = cost(RT_RRT<T>::tree[j].second,1);
-                if (count)
-                  return std::pair<int,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first.first,here.second);
-                else
-                  return std::pair<int,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first.first,RT_RRT<T>::tree[j].second);
+                if(RT_RRT<T>::tree[j].first==child)
+                  break;
               }
+              here = cost(RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first,1,RT_RRT<T>::tree[j].second);
             }
+            else
+             here = cost(RT_RRT<T>::tree[RT_RRT<T>::tree[k].second].first,1,RT_RRT<T>::tree[k].second);
+
+            if (count)
+              return std::pair<int,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first,here.second);
+            else
+              return std::pair<int,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first,RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
   }
 
   template <class T>
   void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > &Q)
   {
     Utils::Point<T> me = Q.pop();
-    std::pair<int,Utils::Point<T>> now = getCost(me);
+    std::pair<int,Utils::Point<T>> now = cost(me);
     int cost = now.first;
     Utils::Point<T> parent = now.second;
     std::vector<Utils::Point<T> > neighbours= find_near_nodes(Q);
