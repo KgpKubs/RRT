@@ -72,7 +72,6 @@ namespace rrt {
 
     std::pair<int, int > hex_round(float,float);
 
-
     std::pair<int, int> Grid_Id(Utils::Point<T>, int size = 4);
 
     /** @brief Return cost
@@ -81,7 +80,7 @@ namespace rrt {
 
     /** @brief Simultaneously expand and rewire the tree
      */
-    void expand_rewire();
+    void expand_rewire();  //left
 
     /** @brief Find all the nodes which are near to @p query
      */
@@ -105,14 +104,12 @@ namespace rrt {
 
     /** @brief Find the closest node
     */
-    Utils::Point<T> closest_node(Utils::Point<T> rand);
+    Utils::Point<T> closest_node(Utils::Point<T> rand);  //left
 
     /** @brief Verify if the line crosses any obstacle
     */
-    bool line_path_obs(Utils::Point<T> p1, Utils::Point<T> p2)
-    {
-
-    }
+    bool line_path_obs(Utils::Point<T>, Utils::Point<T>);
+    bool obstacle_here(int, int);
   };
 
 }
