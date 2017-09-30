@@ -185,4 +185,81 @@ namespace rrt {
     rewire_node(Qs);
   }
 
+  template <class T>
+  bool RT_RRT<T>::line_path_obs(Utils::Point<T> p1, Utils::Point<T> p2)
+  {
+        // RT_RRT<T>::bool obstacle_here(int, int);
+        int x1=p1.x, x2=p2.x, y1=p1.y,y2=p2.y;
+        float x=x1, count;
+        try
+        {
+
+                int m=float(y2-y1)/(x2-x1);
+                if (m==0) throw 20;
+                int c=y2-m*x2;
+                count = fabs(1.0/m);
+                if (count>1) count=1;
+                if (count<-1) count=-1;
+                if (x2<x1) count*=-1;
+                // std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
+                while (1)
+                {
+                    x+=count;
+                    int y=m*x+c;
+                    if ((count>0 and x>=x2) || (count<0 and x<=x2))
+                    {
+                        // std::cout<<"Return true from try\n";
+                        return true;
+                    }
+                    else
+                    {
+                // std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
+                      // std::cout<<std::endl<<"x: "<<x<<" x2: "<<x2<<std::endl;
+                      // std::cout<<"count: "<<count<<std::endl;
+                    }
+                    if (obstacle_here(x,y))
+                    {
+                        // std::cout<<"Return false from try\n";
+                        return false;
+                    }
+                }
+        }
+        catch(int e)
+        {
+                count=1;
+                int y=y1;
+                if (y2<y1) count*=-1;
+                while (1)
+                {
+                    y+=count;
+                    if ((count>0 and y>=y2) || (count<0 and y<=y2))
+                    {
+                      // std::cout<<"Return true from catch\n";
+                        return true;
+                    }
+                    if (RT_RRT<T>::obstacle_here(x,y))
+                    {
+                      // std::cout<<"Return false from catch\n";
+                        return false;
+                    }
+                }
+        }
+
+  }
+
+  template <class T>
+  bool RT_RRT<T>::obstacle_here(int x, int y)
+  {
+    for (int i=0;i<RT_RRT<T>::Xobs.size();i++)
+    {
+      Utils::Point<T> pratham;
+      pratham.x = x; pratham.y = y;
+      Utils::Point<T> dwitiya;
+      dwitiya.x = RT_RRT<T>::Xobs[i].x; dwitiya.y = RT_RRT<T>::Xobs[i].y;
+      if (RT_RRT<T>::dist(pratham,dwitiya)<RT_RRT<T>::obstacle_radius)
+        return true;
+    }
+    return false;
+  }
+
 }
