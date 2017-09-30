@@ -25,9 +25,25 @@ namespace rrt
 	}
 
 	template <class T>
-	std::deque<Utils::Point<T> > RRT<T>::getPointsOnPath()
+	std::vector<Utils::Point<T> > RRT<T>::getPointsOnPath()
 	{
-		return pathPoints;
+		Utils::Point<T> parent = pathPoints[0];
+		finalPath.push_back(parent);
+		int start=0;
+		for (int i=1; i<pathPoints.size();i++)
+		{
+			Utils::Point<T> now = pathPoints[1];
+			if(checkPoint(parent,now)!=true)
+			{
+				parent = pathPoints[i-1];
+				i--;
+				if (i!=0)
+					finalPath.push_back(parent);
+			}
+
+		}
+		finalPath.push_back(pathPoints[pathPoints.size()-1]);
+		return finalPath;
 	}
 
 	template <class T>

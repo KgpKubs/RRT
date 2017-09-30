@@ -19,6 +19,7 @@ namespace rrt
 		double stepLength;
 		double obstacleradius;
 		std::deque<Utils::Point<T> > pathPoints;
+		std::vector<Utils::Point<T> > finalPath;
 		std::vector<Utils::Point<T> > ObstaclePoints;
 		int maxIterations;
 		std::vector< std::pair< Utils::Point<T>, Utils::Point<T> > > tree; 
@@ -37,7 +38,7 @@ namespace rrt
 		}
 		
 		virtual bool plan();
-		virtual std::deque<Utils::Point<T> > getPointsOnPath();
+		virtual std::vector<Utils::Point<T> > getPointsOnPath();
 
 		virtual void setEndPoints(Utils::Point<T> start, Utils::Point<T> end);
 		virtual void setCheckPointFunction(bool (*f)(Utils::Point<T>));
