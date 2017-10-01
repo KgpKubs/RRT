@@ -76,7 +76,7 @@ namespace rrt {
 
     /** @brief Return cost
      */
-    std::pair<int,Utils::Point<T> > cost(Utils::Point<T> child, int count=0);
+    std::pair<double,Utils::Point<T> > cost(Utils::Point<T> child, int count=0);
 
     /** @brief Simultaneously expand and rewire the tree
      */

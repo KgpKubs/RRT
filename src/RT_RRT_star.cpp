@@ -59,11 +59,11 @@ namespace rrt {
     std::vector<Utils::Point<T> > x_near = find_near_nodes(rand);
 
     Utils::Point<T> x_min = closest;
-    int c_min = cost(closest) + dist(closest, rand);
+    double c_min = cost(closest) + dist(closest, rand);
     for (typename std::vector<Utils::Point<T> >::iterator itr = x_near.begin();
       itr != x_near.end(); ++itr) {
 
-      int c_new = cost(*itr) + dist(*itr, rand);
+      double c_new = cost(*itr) + dist(*itr, rand);
 
     }
 
@@ -133,12 +133,12 @@ namespace rrt {
   }
 
   template <class T>
-  std::pair<int,Utils::Point<T> > cost(Utils::Point<T> child, int count=0, int k=-1)
+  std::pair<double,Utils::Point<T> > cost(Utils::Point<T> child, int count=0, int k=-1)
   {
             // k is location in the tree
             if (child==RT_RRT<T>::Xa)
-              return std::pair<int,Utils::Point<T> > (0,RT_RRT<T>::Xa);
-            std::pair<int,Utils::Point<T> > here;
+              return std::pair<double,Utils::Point<T> > (0,RT_RRT<T>::Xa);
+            std::pair<double,Utils::Point<T> > here;
             if (count==0)
             {
               int j=0;
@@ -147,23 +147,31 @@ namespace rrt {
                 if(RT_RRT<T>::tree[j].first==child)
                   break;
               }
-              here = cost(RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first,1,RT_RRT<T>::tree[j].second);
+              if (RT_RRT<T>::line_path_obs(child,(RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first)))
+                here = cost(RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first,1,RT_RRT<T>::tree[j].second);
+              else
+                return std::pair<double,Utils::Point<T> > (std::numeric_limits<double>::infinity(),RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
             }
             else
-             here = cost(RT_RRT<T>::tree[RT_RRT<T>::tree[k].second].first,1,RT_RRT<T>::tree[k].second);
+            {
+              if (RT_RRT<T>::line_path_obs(child,(RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first)))
+                here = cost(RT_RRT<T>::tree[RT_RRT<T>::tree[k].second].first,1,RT_RRT<T>::tree[k].second);
+              else
+                return std::pair<double,Utils::Point<T> > (std::numeric_limits<double>::infinity(),RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
+            }
 
             if (count)
-              return std::pair<int,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first,here.second);
+              return std::pair<double,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first,here.second);
             else
-              return std::pair<int,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first,RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
+              return std::pair<double,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first,RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
   }
 
   template <class T>
   void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > &Q)
   {
     Utils::Point<T> me = Q.pop();
-    std::pair<int,Utils::Point<T>> now = cost(me);
-    int cost = now.first;
+    std::pair<double,Utils::Point<T>> now = cost(me);
+    double cost = now.first;
     Utils::Point<T> parent = now.second;
     std::vector<Utils::Point<T> > neighbours= find_near_nodes(Q);
     for(size_t i = 0; i < neighbours.size(); i++)
