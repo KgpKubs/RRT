@@ -18,7 +18,7 @@ namespace rrt {
     std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs;
 
     // Grid based subset of nodes for grid based search
-    std::map<std::pair<unsigned int, unsigned int> , std::vector<Utils::Point<T> > > grid_nodes;
+    std::map<std::pair<int, int> , std::vector<int > > grid_nodes;
 
     // Position of the agent
     Utils::Point<T> Xa;
@@ -50,8 +50,11 @@ namespace rrt {
     // Useful parameters for setting some search parameters
     unsigned int width, length;
 
+    // Current parent id in the main tree
+    int current_parent_idx;
+
   public:
-    RT_RRT();
+    RT_RRT(Utils::Point<T> Xa, Utils::Point<T> Xg);
 
     RT_RRT(T goal_radius, T obstacle_radius, T search_radius, T node_thresh,
       T epsilon_radius, long int k_max);
@@ -84,7 +87,7 @@ namespace rrt {
 
     /** @brief Find all the nodes which are near to @p query
      */
-    std::vector<Utils::Point<T> > find_near_nodes(Utils::Point<T> query);
+    std::vector<int > find_near_nodes(Utils::Point<T> query);
 
     /** @brief Add a new Point to the tree
      */
@@ -105,6 +108,14 @@ namespace rrt {
     /** @brief Find the closest node
     */
     Utils::Point<T> closest_node(Utils::Point<T> rand);  //left
+
+    /** @brief Add a node to the grid
+    */
+    bool add_node_to_grid(Utils::Point<T> point, int new_idx);
+
+    /** @brief find parent idx of the `son node`
+    */
+    int find_parent_idx(Utils::Point<T> son);
 
     /** @brief Verify if the line crosses any obstacle
     */

@@ -3,7 +3,7 @@
 namespace rrt {
 
   template <class T>
-  RT_RRT<T>::RT_RRT() {
+  RT_RRT<T>::RT_RRT(Utils::Point<T> Xa, Utils::Point<T> Xg) {
     // TODO : set these parameters
     // TODO : Set all parameters in one scale
     goal_radius = 20.0;
@@ -15,6 +15,12 @@ namespace rrt {
 
     width = 6;
     length = 9;
+
+    current_parent_idx = 0;
+    this->Xa = Xa;
+    this->Xg = Xg;
+    tree.push_back(std::make_pair(Xa, 0));
+    ++current_parent_idx;
   }
 
   template <class T>
@@ -29,6 +35,7 @@ namespace rrt {
     this->k_max = k_max;
     width = 6;
     length = 9;
+    current_parent_idx = 0;
   }
 
   template <class T>
@@ -38,16 +45,14 @@ namespace rrt {
   }
 
   template <class T>
-  std::vector<Utils::Point<T> > RT_RRT<T>::find_near_nodes(Utils::Point<T> query) {
+  std::vector<int > RT_RRT<T>::find_near_nodes(Utils::Point<T> query) {
 
     std::pair<unsigned int, unsigned int> grid_idx = this->Grid_Id(query);
-    std::vector<Utils::Point<T> > nearest_points;
-    for (typename std::vector<Utils::Point<T> >::iterator
-      itr = grid_nodes[grid_idx].begin(); itr != grid_nodes[grid_idx].end();
-      ++itr) {
+    std::vector<int > nearest_points;
+    for (int i = 0; i < grid_nodes[grid_idx].size(); ++i) {
         this->update_epsilon_radius();
-        if (this->dist(query, *itr) < this->epsilon_radius) {
-          nearest_points.push_back(*itr);
+        if (this->dist(query, tree[grid_nodes[grid_idx][i]].first) < this->epsilon_radius) {
+          nearest_points.push_back(i);
         }
       }
     return nearest_points;
@@ -56,24 +61,41 @@ namespace rrt {
   template <class T>
   void RT_RRT<T>::add_node_to_tree(Utils::Point<T> rand) {
     Utils::Point<T> closest = closest_node(rand);
-    std::vector<Utils::Point<T> > x_near = find_near_nodes(rand);
+    std::vector<int > x_near = find_near_nodes(rand);
 
     Utils::Point<T> x_min = closest;
+    int parent_idx = -1;
     double c_min = cost(closest) + dist(closest, rand);
-    for (typename std::vector<Utils::Point<T> >::iterator itr = x_near.begin();
-      itr != x_near.end(); ++itr) {
+    for (int i = 0; i < x_near.size(); ++i) {
 
-      double c_new = cost(*itr) + dist(*itr, rand);
-
+      double c_new = cost(tree[i].first) + dist(tree[i].first, rand);
+      if (c_new < c_min && line_path_obs(tree[i].first, rand)) {
+        c_min = c_new;
+        x_min = tree[i].first;
+        parent_idx = i;
+      }
     }
-
+    assert(parent_idx != -1);
+    tree.push_back(std::make_pair(rand, parent_idx));
+    add_node_to_grid(rand, tree.size());
   }
 
   template <class T>
-  double dist(Utils::Point<T> first, Utils::Point<T> second)
+  double RT_RRT<T>::dist(Utils::Point<T> first, Utils::Point<T> second)
   {
     return sqrt(pow(first.x-second.x,2)+pow(first.y-second.y,2));
   }
+
+  template <class T>
+  bool RT_RRT<T>::add_node_to_grid(Utils::Point<T> point, int new_idx) {
+    std::pair<int, int> point_grid_idx = Grid_Id(point);
+
+    if (grid_nodes[point_grid_idx].size() < k_max) {
+      grid_nodes[point_grid_idx].push_back(new_idx);
+      return true;
+    }
+    return false;
+   }
 
   template <class T>
   void cube_round(float xyz[], float rxyz[])
