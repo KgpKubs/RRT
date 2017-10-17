@@ -18,7 +18,7 @@ namespace rrt {
     std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs;
 
     // Grid based subset of nodes for grid based search
-    std::map<std::pair<unsigned int, unsigned int> , std::vector<Utils::Point<T> > > grid_nodes;
+    std::map<std::pair< int, int> , std::vector<Utils::Point<T> > > grid_nodes;
 
     // Position of the agent
     Utils::Point<T> Xa;
@@ -110,6 +110,9 @@ namespace rrt {
     */
     bool line_path_obs(Utils::Point<T>, Utils::Point<T>);
     bool obstacle_here(int, int);
+    /** @brief Verify if the point is present in the grid
+    */
+    bool found_in_grid(std::pair< int, int>, Utils::Point<T>);
   };
 
 }

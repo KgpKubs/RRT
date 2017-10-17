@@ -277,4 +277,22 @@ namespace rrt {
     return false;
   }
 
+  template <class T>
+  bool found_in_grid(std::pair<int, int> grid_id, Utils::Point<T> P)
+  {
+    try
+    {
+      std::vector<Utils::Point<T> > list_of_nodes = RT_RRT<T>::grid_nodes[grid_id];
+      for (int i=0; i<list_of_nodes.size(); i++)
+      {
+        int now = list_of_nodes[i];
+        if ((RT_RRT<T>::tree[now].first).first == P.first && (RT_RRT<T>::tree[now].first).second == P.second)
+          return true;
+      }
+    }
+    catch (int e)
+    {}
+    return false;
+  }
+
 }
