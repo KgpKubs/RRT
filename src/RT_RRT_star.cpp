@@ -98,7 +98,7 @@ namespace rrt {
    }
 
   template <class T>
-  void cube_round(float xyz[], float rxyz[])
+  void RT_RRT<T>::cube_round(float xyz[], float rxyz[])
   {
     float rx = nearbyint(xyz[0]);
     float ry = nearbyint(xyz[1]);
@@ -118,7 +118,7 @@ namespace rrt {
   }
 
   template <class T>
-  std::pair<int, int > cube_to_axial(float rxyz[])
+  std::pair<int, int > RT_RRT<T>::cube_to_axial(float rxyz[])
   {
       int q = rxyz[0];
       int r = rxyz[2];
@@ -126,7 +126,7 @@ namespace rrt {
   }
 
   template <class T>
-  void axial_to_cube(float q, float r, float xyz[])
+  void RT_RRT<T>::axial_to_cube(float q, float r, float xyz[])
   {
     xyz[0] = q;
     xyz[2] = r;
@@ -134,7 +134,7 @@ namespace rrt {
   }
 
   template <class T>
-  std::pair<int, int > hex_round(float q,float r)
+  std::pair<int, int > RT_RRT<T>::hex_round(float q,float r)
   {
     float xyz[3];
     RT_RRT<T>::axial_to_cube(q,r,xyz);
@@ -144,7 +144,7 @@ namespace rrt {
   }
 
   template <class T>
-  std::pair<int, int> Grid_Id(Utils::Point<T> gride_idx, int size = 4)
+  std::pair<int, int> RT_RRT<T>::Grid_Id(Utils::Point<T> gride_idx, int size = 4)
   {
     //size is edge length of hexagon
     float x = gride_idx.x, y = gride_idx.y;
@@ -155,7 +155,7 @@ namespace rrt {
   }
 
   template <class T>
-  std::pair<double,Utils::Point<T> > cost(Utils::Point<T> child, int count=0, int k=-1)
+  std::pair<double,Utils::Point<T> > RT_RRT<T>::cost(Utils::Point<T> child, int count=0, int k=-1)
   {
             // k is location in the tree
             if (child==RT_RRT<T>::Xa)
@@ -189,7 +189,7 @@ namespace rrt {
   }
 
   template <class T>
-  void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > &Q)
+  void RT_RRT<T>::rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > &Q)
   {
     Utils::Point<T> me = Q.pop();
     std::pair<double,Utils::Point<T>> now = cost(me);
@@ -213,7 +213,7 @@ namespace rrt {
   }
 
   template <class T>
-  void rewire_root(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs)
+  void RT_RRT<T>::rewire_root(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs)
   {
     int j;
     std::vector<Utils::Point<T> > neighbours= find_near_nodes(RT_RRT<T>::Xa);
@@ -300,7 +300,7 @@ namespace rrt {
   }
 
   template <class T>
-  bool found_in_grid(std::pair<int, int> grid_id, Utils::Point<T> P)
+  bool RT_RRT<T>::found_in_grid(std::pair<int, int> grid_id, Utils::Point<T> P)
   {
     try
     {
