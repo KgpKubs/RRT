@@ -10,7 +10,7 @@ namespace rrt {
   private:
 
     // Main Tree
-    std::vector<std::pair<Utils::Point<T>, Utils::Point<T> > > tree;
+    std::vector<std::pair<Utils::Point<T>, int > > tree;
 
     // Queue at the Point of addition of the Point to the tree
     std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qr;
@@ -59,37 +59,28 @@ namespace rrt {
     /** @brief Compute the distance between two nodes
     */
 
-    double dist(Utils::Point<T> first, Utils::Point<T> second)
-    {
-      return sqrt(pow(first.x-second.x,2)+pow(first.y-second.y,2));
-    }
+    double dist(Utils::Point<T>, Utils::Point<T>);
+
 
     /** @brief Return Grid Id
      */
-    std::pair<unsigned int, unsigned int> Grid_Id(Utils::Point<T> gride_idx);
+    void cube_round(float*, float*);
+
+    std::pair<int, int > cube_to_axial(float*);
+
+    void axial_to_cube(float , float , float*);
+
+    std::pair<int, int > hex_round(float,float);
+
+    std::pair<int, int> Grid_Id(Utils::Point<T>, int size = 4);
 
     /** @brief Return cost
      */
-    std::pair<int,Utils::Point<T> > cost(Utils::Point<T> child, int count=0)
-    {
-              if (child==Xa)
-                return std::pair<int,Utils::Point<T> > (0,Xa);
-              for(int j=0;j<tree.size();j++)
-              {
-                if(tree[j].first==child)
-                {
-                  std::pair<int,Utils::Point<T> > here = cost(tree[j].second,1);
-                  if (count)
-                    return std::pair<int,Utils::Point<T> >  (dist(child,tree[j].second)+here.first.first,here.second);
-                  else
-                    return std::pair<int,Utils::Point<T> >  (dist(child,tree[j].second)+here.first.first,tree[j].second);
-                }
-              }
-    }
+    std::pair<double,Utils::Point<T> > cost(Utils::Point<T> child, int count=0);
 
     /** @brief Simultaneously expand and rewire the tree
      */
-    void expand_rewire();
+    void expand_rewire();  //left
 
     /** @brief Find all the nodes which are near to @p query
      */
@@ -101,39 +92,11 @@ namespace rrt {
 
     /** @brief Rewire the tree from the latest node added to the tree
      */
-    void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > &Q)
-    {
-      Utils::Point<T> me = Q.pop();
-      std::pair<int,Utils::Point<T>> now = getCost(me);
-      int cost = now.first;
-      Utils::Point<T> parent = now.second;
-      std::vector<Utils::Point<T> > neighbours= find_near_nodes(Q);
-      for(size_t i = 0; i < neighbours.size(); i++)
-          Q.push(neighbours[i]);
-      for (int i=0;i<neighbours.size();i++)
-      {
-        Utils::Point<T> neighbour = neighbours[i];
-        if (cost > cost - dist(me,parent) + dist(parent,neighbour) + dist(neighbour,me))
-        {
-              for(int j=0;j<tree.size();j++)
-              {
-                if(tree[j].first==me)
-                  tree[j].second = neighbour[i];
-              }
-        }
-      }
-    }
+    void rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > &Q);
 
     /** @brief Rewire the tree from the agent's position
     */
-    void rewire_root(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs)
-    {
-      int j;
-      std::vector<Utils::Point<T> > neighbours= find_near_nodes(Xa);
-      for(size_t i = 0; i < neighbours.size(); i++)
-          Qs.push(neighbours[i]);
-      rewire_node(Qs);
-    }
+    void rewire_root(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > Qs);
 
     /** @brief Update the radius of neareset nodes prior to calling `find_near_nodes`
     */
@@ -141,11 +104,12 @@ namespace rrt {
 
     /** @brief Find the closest node
     */
-    Utils::Point<T> closest_node(Utils::Point<T> rand);
+    Utils::Point<T> closest_node(Utils::Point<T> rand);  //left
 
     /** @brief Verify if the line crosses any obstacle
     */
-    bool line_path_obs(Utils::Point<T> p1, Utils::Point<T> p2);
+    bool line_path_obs(Utils::Point<T>, Utils::Point<T>);
+    bool obstacle_here(int, int);
   };
 
 }
