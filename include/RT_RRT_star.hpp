@@ -121,6 +121,9 @@ namespace rrt {
     */
     bool line_path_obs(Utils::Point<T>, Utils::Point<T>);
     bool obstacle_here(int, int);
+    /** @brief Verify if the point is present in the grid
+    */
+    bool found_in_grid(std::pair< int, int>, Utils::Point<T>);
   };
 
 }
