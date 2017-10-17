@@ -139,9 +139,10 @@ namespace rrt {
             if (child==RT_RRT<T>::Xa)
               return std::pair<double,Utils::Point<T> > (0,RT_RRT<T>::Xa);
             std::pair<double,Utils::Point<T> > here;
+
+            int j=0;
             if (count==0)
             {
-              int j=0;
               for(;j<RT_RRT<T>::tree.size();j++)
               {
                 if(RT_RRT<T>::tree[j].first==child)
@@ -154,7 +155,7 @@ namespace rrt {
             }
             else
             {
-              if (RT_RRT<T>::line_path_obs(child,(RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first)))
+              if (RT_RRT<T>::line_path_obs(child,(RT_RRT<T>::tree[RT_RRT<T>::tree[k].second].first)))
                 here = cost(RT_RRT<T>::tree[RT_RRT<T>::tree[k].second].first,1,RT_RRT<T>::tree[k].second);
               else
                 return std::pair<double,Utils::Point<T> > (std::numeric_limits<double>::infinity(),RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
@@ -163,7 +164,7 @@ namespace rrt {
             if (count)
               return std::pair<double,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first,here.second);
             else
-              return std::pair<double,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first,RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
+              return std::pair<double,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[k].second)+here.first,RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
   }
 
   template <class T>
