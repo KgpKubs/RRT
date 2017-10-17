@@ -144,7 +144,7 @@ namespace rrt {
   }
 
   template <class T>
-  std::pair<int, int> RT_RRT<T>::Grid_Id(Utils::Point<T> gride_idx, int size = 4)
+  std::pair<int, int> RT_RRT<T>::Grid_Id(Utils::Point<T> gride_idx, int size)
   {
     //size is edge length of hexagon
     float x = gride_idx.x, y = gride_idx.y;
@@ -155,7 +155,7 @@ namespace rrt {
   }
 
   template <class T>
-  std::pair<double,Utils::Point<T> > RT_RRT<T>::cost(Utils::Point<T> child, int count=0, int k=-1)
+  std::pair<double,Utils::Point<T> > RT_RRT<T>::cost(Utils::Point<T> child, int count, int k)
   {
             // k is location in the tree
             if (child==RT_RRT<T>::Xa)
