@@ -1,4 +1,4 @@
-#include "RT_RRT_star.hpp"
+#include "../include/RT_RRT_star.hpp"
 
 namespace rrt {
 
@@ -65,10 +65,10 @@ namespace rrt {
 
     Utils::Point<T> x_min = closest;
     int parent_idx = -1;
-    double c_min = cost(closest) + dist(closest, rand);
+    double c_min = cost(closest).first + dist(closest, rand);
     for (int i = 0; i < x_near.size(); ++i) {
 
-      double c_new = cost(tree[i].first) + dist(tree[i].first, rand);
+      double c_new = cost(tree[i].first).first + dist(tree[i].first, rand);
       if (c_new < c_min && line_path_obs(tree[i].first, rand)) {
         c_min = c_new;
         x_min = tree[i].first;
@@ -183,9 +183,9 @@ namespace rrt {
             }
 
             if (count)
-              return std::pair<double,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[j].second)+here.first,here.second);
+              return std::pair<double,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first)+here.first,here.second);
             else
-              return std::pair<double,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[k].second)+here.first,RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
+              return std::pair<double,Utils::Point<T> >  (dist(child,RT_RRT<T>::tree[RT_RRT<T>::tree[k].second].first)+here.first,RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
   }
 
   template <class T>
