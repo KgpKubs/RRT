@@ -24,8 +24,8 @@ int main(int argc, char **argv) {
     while(1)
     {
         Utils::Point<int> now;
-        now.x = rand()%1000;
-        now.y = rand()%8000;
+        now.x = rand()%100;
+        now.y = rand()%100;
         test.add_node_to_tree(now);
         std::cout<<"Generated a point\n";
     }
