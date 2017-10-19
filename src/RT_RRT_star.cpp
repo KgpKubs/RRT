@@ -192,7 +192,7 @@ namespace rrt {
   void RT_RRT<T>::rewire_node(std::queue<std::pair<Utils::Point<T>, Utils::Point<T> > > &Q)
   {
     Utils::Point<T> me = Q.pop();
-    std::pair<double,Utils::Point<T>> now = cost(me);
+    std::pair<double,Utils::Point<T> > now = cost(me);
     double cost = now.first;
     Utils::Point<T> parent = now.second;
     std::vector<Utils::Point<T> > neighbours= find_near_nodes(Q);
