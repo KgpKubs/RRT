@@ -63,20 +63,34 @@ namespace rrt {
     // std::cout<<"Tree size is: "<<tree.size()<<std::endl;
     // Utils::Point<T> closest = closest_node(rand);
     std::vector<int > x_near = find_near_nodes(rand);
+    Utils::Point<T> new_point;
     int parent_idx = -1;
     if (x_near.size())
     {
       // std::cout<<"Here if\n";
       Utils::Point<T> x_min = tree[x_near[0]].first;
       parent_idx = x_near[0];
+
+      double theta = atan2(rand.y-tree[x_near[0]].first.y,rand.x-tree[x_near[0]].first.x);
+      new_point.x=tree[x_near[0]].first.x+node_thresh*cos(theta);
+      new_point.y=tree[x_near[0]].first.y+node_thresh*sin(theta);
+
       double c_min = cost(x_min, 0, 0).first + dist(x_min, rand);
       for (int i = 1; i < x_near.size(); ++i) {
-        double c_new = cost(tree[i].first,1,i).first + dist(tree[i].first, rand);
-        if (c_new < c_min && line_path_obs(tree[i].first, rand)) {
+        double c_new = cost(tree[x_near[i]].first,1,i).first + dist(tree[x_near[i]].first, rand);
+
+
+        if (c_new < c_min) {
           // std::cout<<"Here 2\n";
-          c_min = c_new;
-          x_min = tree[i].first;
-          parent_idx = i;
+          double theta = atan2(rand.y-tree[x_near[i]].first.y,rand.x-tree[x_near[i]].first.x);
+          new_point.x=tree[x_near[i]].first.x+node_thresh*cos(theta);
+          new_point.y=tree[x_near[i]].first.y+node_thresh*sin(theta);
+
+          if (line_path_obs(tree[x_near[i]].first, new_point)){
+            c_min = c_new;
+            x_min = tree[x_near[i]].first;
+            parent_idx = i;
+          }
         }
       }
     }
@@ -85,25 +99,37 @@ namespace rrt {
       // std::cout<<"Here else with tree size: "<<tree.size()<<std::endl;
       Utils::Point<T> x_min = tree[0].first;
       parent_idx = 0;
+
+      double theta = atan2(rand.y-tree[0].first.y,rand.x-tree[0].first.x);
+      new_point.x=tree[0].first.x+node_thresh*cos(theta);
+      new_point.y=tree[0].first.y+node_thresh*sin(theta);
+
       double c_min = dist(tree[0].first, rand);
       // std::cout<<"Cost0: "<<c_min<<" from the point "<<tree[0].first.x<<","<<tree[0].first.y<<"\n";
       for (int i = 1; i < tree.size(); ++i) {
         double c_new = dist(tree[i].first, rand);
         // std::cout<<"Cost"<<i<<": "<<c_new<<" from the point "<<tree[i].first.x<<","<<tree[i].first.y<<"\n";
-        if (c_new < c_min && line_path_obs(tree[i].first, rand)) {
-          c_min = c_new;
-          x_min = tree[i].first;
-          parent_idx = i;
+        if (c_new < c_min) {
+
+          double theta = atan2(rand.y-tree[i].first.y,rand.x-tree[i].first.x);
+          new_point.x=tree[i].first.x+node_thresh*cos(theta);
+          new_point.y=tree[i].first.y+node_thresh*sin(theta);
+
+          if (line_path_obs(tree[i].first, new_point)){
+            c_min = c_new;
+            x_min = tree[i].first;
+            parent_idx = i;
+          }
         }
       }
     }
     
     
     // assert(parent_idx != -1);
-    tree.push_back(std::make_pair(rand, parent_idx));
-    add_node_to_grid(rand, tree.size());
+    tree.push_back(std::make_pair(new_point, parent_idx));
+    add_node_to_grid(new_point, tree.size());
     // std::cout<<"Index: "<<parent_idx<<std::endl;
-    return std::make_pair(rand, tree[parent_idx].first);
+    return std::make_pair(new_point, tree[parent_idx].first);
   }
 
   template <class T>
