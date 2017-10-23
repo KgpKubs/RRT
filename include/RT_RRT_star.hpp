@@ -91,7 +91,7 @@ namespace rrt {
 
     /** @brief Add a new Point to the tree
      */
-    void add_node_to_tree(Utils::Point<T> rand);
+    std::pair<Utils::Point<T>, Utils::Point<T> >  add_node_to_tree(Utils::Point<T> rand);
 
     /** @brief Rewire the tree from the latest node added to the tree
      */

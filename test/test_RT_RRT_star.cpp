@@ -2,7 +2,14 @@
 #include "RT_RRT_star.hpp"
 
 
+
 int main(int argc, char **argv) {
+    srand(time(NULL));
+    Utils::Point<int> start,finish;
+    start.x=10;
+    start.y=10;
+    finish.x=6000;
+    finish.y=4000;
 
     RT_RRT<int> test(start,finish);
     // test.setEndPoints(start,finish);
@@ -17,10 +24,12 @@ int main(int argc, char **argv) {
     while(1)
     {
         Utils::Point<int> now;
-        now.x = rand()%100;
-        now.y = rand()%100;
-        test.add_node_to_tree(now);
-        std::cout<<"Generated a point\n";
+        now.x = rand()%6000;
+        now.y = rand()%4000;
+        std::pair<Utils::Point<int>,Utils::Point<int> > came_back = test.add_node_to_tree(now);
+        // test.add_node_to_tree(now);
+        std::cout<<"Generated a point "<<came_back.first.x<<","<<came_back.first.y<<" with parent "<<came_back.second.x<<","<<came_back.second.y<<std::endl;
+        // std::cout<<"Generated point\n";
     }
     // for(int i=0;i<path.size();i++)
     //     cout<<path[i].x<<","<<path[i].y<<endl;
