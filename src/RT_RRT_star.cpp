@@ -13,8 +13,8 @@ namespace rrt {
     epsilon_radius = 20.0;
     k_max = 20.0;
 
-    width = 100;
-    length = 100;
+    width = 6000;
+    length = 4000;
 
     current_parent_idx = 0;
     this->Xa = Xa;
@@ -59,20 +59,21 @@ namespace rrt {
   }
 
   template <class T>
-  void RT_RRT<T>::add_node_to_tree(Utils::Point<T> rand) {
-    std::cout<<"Tree size is: "<<tree.size()<<std::endl;
+  std::pair<Utils::Point<T>, Utils::Point<T> > RT_RRT<T>::add_node_to_tree(Utils::Point<T> rand) {
+    // std::cout<<"Tree size is: "<<tree.size()<<std::endl;
     // Utils::Point<T> closest = closest_node(rand);
     std::vector<int > x_near = find_near_nodes(rand);
     int parent_idx = -1;
     if (x_near.size())
     {
+      // std::cout<<"Here if\n";
       Utils::Point<T> x_min = tree[x_near[0]].first;
-      double c_min = cost(x_min).first + dist(x_min, rand);
+      parent_idx = x_near[0];
+      double c_min = cost(x_min, 0, 0).first + dist(x_min, rand);
       for (int i = 1; i < x_near.size(); ++i) {
-        double c_new = cost(tree[i].first).first + dist(tree[i].first, rand);
-        std::cout<<"Here 1\n";
+        double c_new = cost(tree[i].first,1,i).first + dist(tree[i].first, rand);
         if (c_new < c_min && line_path_obs(tree[i].first, rand)) {
-          std::cout<<"Here 2\n";
+          // std::cout<<"Here 2\n";
           c_min = c_new;
           x_min = tree[i].first;
           parent_idx = i;
@@ -81,13 +82,15 @@ namespace rrt {
     }
     else
     {
+      // std::cout<<"Here else with tree size: "<<tree.size()<<std::endl;
       Utils::Point<T> x_min = tree[0].first;
-      double c_min = cost(tree[0].first).first + dist(tree[0].first, rand);
+      parent_idx = 0;
+      double c_min = dist(tree[0].first, rand);
+      // std::cout<<"Cost0: "<<c_min<<" from the point "<<tree[0].first.x<<","<<tree[0].first.y<<"\n";
       for (int i = 1; i < tree.size(); ++i) {
-        double c_new = cost(tree[i].first).first + dist(tree[i].first, rand);
-        std::cout<<"Here 1\n";
+        double c_new = dist(tree[i].first, rand);
+        // std::cout<<"Cost"<<i<<": "<<c_new<<" from the point "<<tree[i].first.x<<","<<tree[i].first.y<<"\n";
         if (c_new < c_min && line_path_obs(tree[i].first, rand)) {
-          std::cout<<"Here 2\n";
           c_min = c_new;
           x_min = tree[i].first;
           parent_idx = i;
@@ -99,6 +102,8 @@ namespace rrt {
     // assert(parent_idx != -1);
     tree.push_back(std::make_pair(rand, parent_idx));
     add_node_to_grid(rand, tree.size());
+    // std::cout<<"Index: "<<parent_idx<<std::endl;
+    return std::make_pair(rand, tree[parent_idx].first);
   }
 
   template <class T>
@@ -188,17 +193,22 @@ namespace rrt {
               for(;j<RT_RRT<T>::tree.size();j++)
               {
                 if(RT_RRT<T>::tree[j].first==child)
+                {
+                  // std::cout<<"broken\n";
                   break;
+                }
               }
+              // std::cout<<"j is: "<<j<<" and tree size is: "<<tree.size()<<std::endl;
               if (RT_RRT<T>::line_path_obs(child,(RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first)))
-                here = cost(RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first,1,RT_RRT<T>::tree[j].second);
+                here = cost(tree[tree[j].second].first,1,tree[j].second);
               else
                 return std::pair<double,Utils::Point<T> > (std::numeric_limits<double>::infinity(),RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
             }
             else
             {
+              // std::cout<<"No chance of breaking\n";
               if (RT_RRT<T>::line_path_obs(child,(RT_RRT<T>::tree[RT_RRT<T>::tree[k].second].first)))
-                here = cost(RT_RRT<T>::tree[RT_RRT<T>::tree[k].second].first,1,RT_RRT<T>::tree[k].second);
+                here = cost(tree[tree[k].second].first,1,tree[k].second);
               else
                 return std::pair<double,Utils::Point<T> > (std::numeric_limits<double>::infinity(),RT_RRT<T>::tree[RT_RRT<T>::tree[j].second].first);
             }
@@ -247,7 +257,7 @@ namespace rrt {
   bool RT_RRT<T>::line_path_obs(Utils::Point<T> p1, Utils::Point<T> p2)
   {
         // RT_RRT<T>::bool obstacle_here(int, int);
-        std::cout<<"Here!\n";
+        // std::cout<<"Here!\n";
         int x1=p1.x, x2=p2.x, y1=p1.y,y2=p2.y;
         float x=x1, count;
         try
@@ -260,25 +270,25 @@ namespace rrt {
                 if (count>1) count=1;
                 if (count<-1) count=-1;
                 if (x2<x1) count*=-1;
-                std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
+                // std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
                 while (1)
                 {
                     x+=count;
                     int y=m*x+c;
                     if ((count>0 and x>=x2) || (count<0 and x<=x2))
                     {
-                        std::cout<<"Return true from try\n";
+                        // std::cout<<"Return true from try\n";
                         return true;
                     }
                     else
                     {
-                std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
-                      std::cout<<std::endl<<"x: "<<x<<" x2: "<<x2<<std::endl;
-                      std::cout<<"count: "<<count<<std::endl;
+                // std::cout<<"\nm is "<<m<<" and count is: "<<count<<"\n";
+                //       std::cout<<std::endl<<"x: "<<x<<" x2: "<<x2<<std::endl;
+                //       std::cout<<"count: "<<count<<std::endl;
                     }
                     if (obstacle_here(x,y))
                     {
-                        std::cout<<"Return false from try\n";
+                        // std::cout<<"Return false from try\n";
                         return false;
                     }
                 }
@@ -293,12 +303,12 @@ namespace rrt {
                     y+=count;
                     if ((count>0 and y>=y2) || (count<0 and y<=y2))
                     {
-                      std::cout<<"Return true from catch\n";
+                      // std::cout<<"Return true from catch\n";
                         return true;
                     }
                     if (RT_RRT<T>::obstacle_here(x,y))
                     {
-                      std::cout<<"Return false from catch\n";
+                      // std::cout<<"Return false from catch\n";
                         return false;
                     }
                 }
@@ -342,7 +352,7 @@ namespace rrt {
   template <class T>
   Utils::Point<T> RT_RRT<T>::closest_node(Utils::Point<T> rand)
   {
-    std::cout<<"In close node\n";
+    // std::cout<<"In close node\n";
     return  RT_RRT<T>::cost(rand).second;
   }
 
