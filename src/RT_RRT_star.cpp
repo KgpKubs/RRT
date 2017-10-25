@@ -9,7 +9,7 @@ namespace rrt {
     goal_radius = 20.0;
     obstacle_radius = 20.0;
     search_radius = 20.0;
-    node_thresh = 20.0;
+    node_thresh = 160.0;
     epsilon_radius = 20.0;
     k_max = 20.0;
 
