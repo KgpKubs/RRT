@@ -17,7 +17,10 @@ namespace rrt
 		Utils::Point<T> startPoint;
 		Utils::Point<T> endPoint;
 		double stepLength;
+		double obstacleradius;
 		std::deque<Utils::Point<T> > pathPoints;
+		std::vector<Utils::Point<T> > finalPath;
+		std::vector<Utils::Point<T> > ObstaclePoints;
 		int maxIterations;
 		std::vector< std::pair< Utils::Point<T>, Utils::Point<T> > > tree; 
 		std::vector< std::pair< Utils::Point<T>, Utils::Point<T> > > tree1; 
@@ -35,7 +38,7 @@ namespace rrt
 		}
 		
 		virtual bool plan();
-		virtual std::deque<Utils::Point<T> > getPointsOnPath();
+		virtual std::vector<Utils::Point<T> > getPointsOnPath();
 
 		virtual void setEndPoints(Utils::Point<T> start, Utils::Point<T> end);
 		virtual void setCheckPointFunction(bool (*f)(Utils::Point<T>));
@@ -44,6 +47,7 @@ namespace rrt
 		virtual void setHalfDimensions(double x,double y);
 		virtual void setBiasParameter(unsigned int);
 		virtual void setMaxIterations(int);
+		virtual void setObstacleRadius(int);
 		//TODO : To be implemented in the derived classes
 		// virtual void interpolate();
 		// virtual void fitVelocityProfile();
@@ -51,15 +55,16 @@ namespace rrt
 
 	private:
 		bool (*userCheck)(Utils::Point<T>);
-		bool checkPoint(Utils::Point<T> pt);
+		bool checkPoint(Utils::Point<T>, Utils::Point<T>);
 		Utils::Point<T> generatePoint();
 		Utils::Point<T> generateBiasedPoint(int);
-		void growTree(Utils::Point<T>);
+		void growTree(std::pair<Utils::Point<T>,int>,Utils::Point<T>);
 		std::pair<Utils::Point<T>, int>  findClosestNode(Utils::Point<T>);
 		Utils::Point<T> getParent(Utils::Point<T>);
 		std::pair <Utils::Point <T>,Utils::Point <T> > treeComplete(int*);
 		void generatePath(Utils::Point<T> first,Utils::Point<T> last);
 		double dist(Utils::Point<T> a,Utils::Point<T> b);
+		bool obstacle_here(int, int);
 	};
 }
 
